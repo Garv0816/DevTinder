@@ -3,9 +3,13 @@ const DB = require("./config/database")
 const User = require("./models/user")
 const{validation} =  require("./utiles/validation")
 const bcrypt  = require("bcrypt")
+const cookieParcel = require("cookie-parser")
+const jwt = require("jsonwebtoken")
+const userAuth = require("./userAuth/userAuth")
 const app = express()
 
 app.use(express.json())
+app.use(cookieParcel())
 
 app.post("/signup" , async(req , res)=>{
     try{
@@ -32,7 +36,6 @@ app.post("/signup" , async(req , res)=>{
     }
     
 })
-
 app.post("/login", async(req,res)=>{
     try{
         const{email ,  password} = req.body
@@ -44,7 +47,11 @@ app.post("/login", async(req,res)=>{
         // checking password is correct or not
         const checkedPassword =  await bcrypt.compare(password , user.password)
         if(checkedPassword){
-            res.send("Logic Successful")
+            // creating JWT Token from Jsonwebtoken
+             const token = await user.getJWT();
+            // sending the cookie to client .....
+            res.cookie("token" , token)
+            res.send("cookie send successfully")
         }
         else{
             throw new Error("Error")
@@ -56,30 +63,25 @@ app.post("/login", async(req,res)=>{
     }
     
 })
-app.get("/user" , async(req ,res)=>{
-    const UserEmail = req.body.email
-    try{
-        const user = await User.find({email : UserEmail})
-        if(user.length ===0 ){
-            res.send("User Not Found")
-        }else{
-            res.send(user)
-        }
-        
-        
-    }
-    catch(err){
-        res.status(404).send("Error Occured")
-    }
-   
+app.get("/profile",userAuth,async(req , res)=>{
+
+//taking cookie from client to server for validation...
+try{
+    const userID = req.userID
+    const ProfilePage = await User.findOne({_id : userID})
+    res.send(ProfilePage)
+
+}
+catch(err){
+    throw new Error("Please Login")
+}                
+
 })
 app.delete("/user",async(req,res)=>{
     const userID = req.body.userID
     try{
         await User.findByIdAndDelete(userID)
-        res.send("User Deleted Successfully")
-    
-       
+        res.send("User Deleted Successfully")       
     }
     catch(err){
          console.log(err)
@@ -119,6 +121,9 @@ app.patch("/user",async(req , res)=>{
     
 
 })
+
+
+
 DB()
 .then(()=>{console.log("success in setting up the DB")
 app.listen
