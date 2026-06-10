@@ -1,127 +1,20 @@
 const express =  require("express")
 const DB = require("./config/database")
-const User = require("./models/user")
-const{validation} =  require("./utiles/validation")
-const bcrypt  = require("bcrypt")
+const router =  require("./Router/auth")
 const cookieParcel = require("cookie-parser")
-const jwt = require("jsonwebtoken")
-const userAuth = require("./userAuth/userAuth")
+const profileRouter = require("./Router/Profile")
+const ConnectionRouter = require("./Router/connectionrequest")
 const app = express()
 
 app.use(express.json())
 app.use(cookieParcel())
 
-app.post("/signup" , async(req , res)=>{
-    try{
-        const{firstName , lastName , email , password} = req.body
-        //validation for new user
-        validation(req)
-        //encryption of password
-        
-        const EncryptedPassword = await bcrypt.hash(password , 10)
-        console.log(EncryptedPassword)
 
-        // creating new instance for user
-        const newUser = new User({firstName,
-            lastName,
-            email,
-            password : EncryptedPassword
-    })
-    // storing new instance in Data Base
-        await newUser.save()
-        res.send("User Added successfully !")
-    }
-    catch(err){
-        res.status(401).send("User can't be Added" + err.message)
-    }
-    
-})
-app.post("/login", async(req,res)=>{
-    try{
-        const{email ,  password} = req.body
-        // checking if email presend in DB usin findOne
-        const user =await User.findOne({email : email})
-        if(!user){
-            throw new Error("Email do not exist in DB")
-        }
-        // checking password is correct or not
-        const checkedPassword =  await bcrypt.compare(password , user.password)
-        if(checkedPassword){
-            // creating JWT Token from Jsonwebtoken
-             const token = await user.getJWT();
-            // sending the cookie to client .....
-            res.cookie("token" , token)
-            res.send("cookie send successfully")
-        }
-        else{
-            throw new Error("Error")
-        }
-    }
-    catch(err){
-        console.log(err)
-        res.send("error while login your page")
-    }
-    
-})
-app.get("/profile",userAuth,async(req , res)=>{
+app.use("/" , router)
+app.use("/", profileRouter)
+app.use("/" , ConnectionRouter)
 
-//taking cookie from client to server for validation...
-try{
-    const userID = req.userID
-    const ProfilePage = await User.findOne({_id : userID})
-    res.send(ProfilePage)
-
-}
-catch(err){
-    throw new Error("Please Login")
-}                
-
-})
-app.delete("/user",async(req,res)=>{
-    const userID = req.body.userID
-    try{
-        await User.findByIdAndDelete(userID)
-        res.send("User Deleted Successfully")       
-    }
-    catch(err){
-         console.log(err)
-        res.status(404).send("User Not Deleted")
-    }
-})
-// Updating User Data 
-app.patch("/user",async(req , res)=>{
-    try{
-        
-        // taking data json from patch
-    const userID = req.body.userID
-    const UpdatedUserData = req.body
-
-        // Limited data can be modifies not all 
-        const isAllowedToUpdate = ["userID" ,"firstName" , "lastName", "age","PhotoURL" , "skills" , "password"]
-        // checking for each element of data if those paramter exists in allowed update 
-
-        const AllowedUpdate = Object.keys(UpdatedUserData).every(k=> isAllowedToUpdate.includes(k))
-        if(!AllowedUpdate){
-            throw new Error("User can not be added")
-        }
-
-    const UpdatedUserDB = await User.findByIdAndUpdate
-    (userID , UpdatedUserData)
-        
-        await UpdatedUserDB.save()
-        res.send("Data Updated successfully")
-    }
-    catch(err){
-        console.log(err)
-        //console.log(UpdatedUserData)
-        res.send("Data Didn't Updated")
-       
-    }
-    runValidator :true
-    
-
-})
-
+console.log("ConnectionRouter",ConnectionRouter.route)
 
 
 DB()
