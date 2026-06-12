@@ -14,7 +14,7 @@ profileRouter
 -POST/request/send/instrested/userID
 -POST/request/send/ignore/userID
 
--Connection Request
+-Connection Request - accepted or rejected
 -POST/request/received/instrested/requestedID
 -POST/request/rejected/ignore/requestedID
 
