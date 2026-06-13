@@ -18,8 +18,9 @@ profileRouter
 -POST/request/received/instrested/requestedID
 -POST/request/rejected/ignore/requestedID
 
--GET /connections
+
 -GET /requests/received
+-GET /requests/connections
 -GET /feed - Gets the profile of other User on your platform
 
 -STATUS 

@@ -2,7 +2,8 @@ const mongoose = require("mongoose")
 
 const connectionRequest = new mongoose.Schema({
     fromUserID : {
-        type : mongoose.Schema.Types.ObjectId
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "User"
        
     },
      toUserID : {
@@ -13,7 +14,6 @@ const connectionRequest = new mongoose.Schema({
         type: String,
         enum: ["Intrested", "Rejected", "Ignored","Accepted"],
         message: "{VALUE} is not allowed"
-
     }   
 },
 {timestamps : true})

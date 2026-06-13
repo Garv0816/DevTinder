@@ -4,6 +4,7 @@ const router =  require("./Router/auth")
 const cookieParcel = require("cookie-parser")
 const profileRouter = require("./Router/Profile")
 const ConnectionRouter = require("./Router/connectionrequest")
+const RequestRouter = require("./Router/user")
 const app = express()
 
 app.use(express.json())
@@ -13,7 +14,7 @@ app.use(cookieParcel())
 app.use("/" , router)
 app.use("/", profileRouter)
 app.use("/" , ConnectionRouter)
-
+app.use("/", RequestRouter)
 console.log("ConnectionRouter",ConnectionRouter.route)
 
 

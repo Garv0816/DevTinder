@@ -3,6 +3,7 @@ const userAuth = require("../userAuth/userAuth")
 const ConnectionRouter = express.Router()
 const ConnectionRequestModel =  require("../models/Request")
 const User = require("../models/user")
+const { ConnectionStates } = require("mongoose")
 
 //SENDING CONNECTION REQUEST CAN BE INTERESTED AND IGNORED
 ConnectionRouter.post("/request/send/:status/:userID" , userAuth , async(req ,res)=>{
@@ -78,39 +79,44 @@ catch(err){
 
 })
 
-// PENDING ...... NOT COMPLETED AND CODE IS ALSO WRONG....
+
+
 ConnectionRouter.post("/request/received/:status/:requestedID" , userAuth, async(req ,res)=>{
     try{
-    const requestID = req.params.requestID;
+    const requestID = req.params.requestedID;
     const status = req.params.status
-    const loggedInUser = req.User
+    const loggedInUser = req.userID
 
-    //Validations : 
-
-    // 1. Allowed Value of status
-    const allowedStatus = ["Accepted" , "Rejected"]
-    const IsStatusValid = allowedStatus.includes(status)
-
-    if(!IsStatusValid){
-        throw new Error("Status Value is not valid")
+    // console.log(requestID , status , loggedInUser)   
+    //console.log("userid===>",requestID)
+    //console.log("status===>",status)
+    //console.log("loggedInUser===>",loggedInUser)
+    const AllowedStatus = ["Accepted" , "Rejected"]
+    const isStatusValid = AllowedStatus.includes(status)
+    if(!isStatusValid){
+        return res.json({message : "Invalid status value"})
     }
 
-    //
-    const connectionrequest = ConnectionRequestModel.findOne({
-        _id:requestID,
+    const connectionrequest = await ConnectionRequestModel.findOne({
+        fromUserID : requestID,
         toUserID : loggedInUser,
-        status : "Interested"
+        status : "Intrested"
     })
 
+    //console.log("test==>",connectionrequest)
     if(!connectionrequest){
-        res.json({"message" : "Request not found"})
+    return res.json({message :"connection request not found"})
     }
+    connectionrequest.status = status;
 
+
+    const data = await connectionrequest.save()
+    res.json({message : "connection request" + status , data  })
 
 
     }
     catch(err){
-        res.json({message : "Error in responding user request" + err})
+       return res.json({message : "Error in responding user request" + err})
     }
   
 })
